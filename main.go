@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strconv"
 
 	"github.com/shomali11/slacker"
 )
@@ -14,18 +15,34 @@ func printCommandEvents(analyticsChannel <-chan *slacker.CommandEvent) {
 		fmt.Println("Command Events")
 		fmt.Println(event.Timestamp)
 		fmt.Println(event.Command)
+		fmt.Println(event.Parameters)
 		fmt.Println(event.Event)
 		fmt.Println()
 	}
 }
 
 func main() {
-	os.Setenv("SLACK_BOT_TOKEN", "4301931977716-4299464490755-mRYMgrdYy0LFLkYh0U9eUYf0")
-	os.Setenv("SLACK_APP_TOKEN", "xapp-1-A048CTF0S3H-4299386457043-0d8ce1f0f0ebd083f6fc851b0c9da1dac19bb7d85119e73a6f05b4389fec8d1e")
+	os.Setenv("SLACK_BOT_TOKEN", "<...>")
+	os.Setenv("SLACK_APP_TOKEN", "<xapp-...>")
 
 	bot := slacker.NewClient(os.Getenv("SLACK_BOT_TOKEN"), os.Getenv("SLACK_APP_TOKEN"))
 
 	go printCommandEvents(bot.CommandEvents())
+
+	bot.Command("My yob is <year>", &slacker.CommandDefinition{
+		Description: "yob calculator",
+		Handler: func(botCtx slacker.BotContext, request slacker.Request, response slacker.ResponseWriter) {
+			year := request.Param("year")
+			yob, err := strconv.Atoi(year)
+
+			if err != nil {
+				print("error")
+			}
+			age := 2022 - yob
+			r := fmt.Sprintf("age is %d", age)
+			response.Reply(r)
+
+		}})
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -35,5 +52,4 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-
 }
